@@ -1,0 +1,17 @@
+{
+  "name": "blogilista",
+  "version": "1.0.0",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:AaltonenJari/blogilista.git"
+  },
+  "license": "MIT",
+  "author": "JA",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
