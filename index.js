@@ -12,7 +12,10 @@ const blogSchema = mongoose.Schema({
 
 const Blog = mongoose.model('Blog', blogSchema)
 
-const mongoUrl = 'mongodb://localhost/bloglist'
+// ÄLÄ KOSKAAN TALLETA SALASANOJA GitHubiin!
+const password = process.argv[2]
+const mongoUrl = `mongodb+srv://jaritapaniaaltonen_db_user:${password}@ccluster0.efy2nbv.mongodb.net/blogApp?retryWrites=true&w=majority&appName=Cluster0`
+
 mongoose.connect(mongoUrl, { family: 4 })
 
 app.use(express.json())
