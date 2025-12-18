@@ -25,8 +25,32 @@ const favoriteBlog = (blogs) => {
   return favorite
 }
 
+const mostBlogs = (blogs) => {
+  //  palauttaa kirjoittajan, jolla on eniten blogeja, sekä blogien lukumäärän
+  if (blogs.length === 0) {
+    return null
+  }
+
+  const authorCounts = {}
+  blogs.forEach(blog => {
+    authorCounts[blog.author] = (authorCounts[blog.author] || 0) + 1
+  })
+
+  const maxBlogs = Math.max(...Object.values(authorCounts))
+  const mostBlogsAuthor = Object.keys(authorCounts).find(
+    author => authorCounts[author] === maxBlogs
+  )
+
+  return {
+    author: mostBlogsAuthor,
+    blogs: maxBlogs
+  } 
+}
+
+
 module.exports = {
   dummy,
   totalLikes,
-  favoriteBlog
+  favoriteBlog,
+  mostBlogs
 }
