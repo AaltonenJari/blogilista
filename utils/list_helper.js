@@ -47,10 +47,32 @@ const mostBlogs = (blogs) => {
   } 
 }
 
+const mostLikes = (blogs) => {
+  //  palauttaa kirjoittajan, jonka blogeilla on eniten tykkäyksiä eli likeja, sekä tykkäysten määrän
+  if (blogs.length === 0) {
+    return null
+  }
+
+  const authorLikes = {}
+  blogs.forEach(blog => {
+    authorLikes[blog.author] = (authorLikes[blog.author] || 0) + blog.likes
+  })
+
+  const maxLikes = Math.max(...Object.values(authorLikes))
+  const mostLikesAuthor = Object.keys(authorLikes).find(
+    author => authorLikes[author] === maxLikes
+  )
+
+  return {  
+    author: mostLikesAuthor,
+    likes: maxLikes
+  }
+}
 
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
-  mostBlogs
+  mostBlogs,
+  mostLikes
 }
