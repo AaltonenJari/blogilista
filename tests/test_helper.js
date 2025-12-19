@@ -12,12 +12,6 @@ const initialBlogss = [
     author: "Katri Rantala",
     url: "https://piilo-osaajat.com/2025/04/10/politiikka-meemiytyy-eika-se-ole-lopulta-hauskaa/",
     likes: 6
-  },
-  {
-    title: "Tekoäly työnhaussa: Hakemuksen laatiminen",
-    author: "Jari Aaltonen",
-    url: "https://piilo-osaajat.com/2024/11/28/tekoaly-tyonhaussa-hakemuksen-laatiminen/",
-    likes: 2
   }
 ]
 

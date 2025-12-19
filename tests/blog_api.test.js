@@ -68,6 +68,24 @@ test('blog identifier is named id', async () => {
   assert.ok(blog.id)
 })
 
+test ('if likes property is missing, it will default to zero', async () => {
+  const newBlog = {
+    title: "Tekoäly työnhaussa: Hakemuksen laatiminen",
+    author: "Jari Aaltonen",
+    url: "https://piilo-osaajat.com/2024/11/28/tekoaly-tyonhaussa-hakemuksen-laatiminen/"
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+
+  const blogsAtEnd = await helper.blogsInDb()
+  const blog = blogsAtEnd.find(b => b.title === "Tekoäly työnhaussa: Hakemuksen laatiminen")
+  assert.strictEqual(blog.likes, 0)
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
