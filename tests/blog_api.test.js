@@ -61,6 +61,13 @@ test('a valid blog can be added ', async () => {
   assert(contents.includes('Tekoälyä vai ei älyä? – Kuinka tekoäly muokkaa inhimillistä johtamista?'))
 })
 
+test('blog identifier is named id', async () => {
+  const response = await api.get('/api/blogs')
+
+  const blog = response.body[0]
+  assert.ok(blog.id)
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
