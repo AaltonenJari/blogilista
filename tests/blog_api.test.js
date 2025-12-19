@@ -117,7 +117,67 @@ describe('when there is initially some blogs saved', () => {
 
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length - 1)
     })
+
+    test('deleting a non-existing blog returns 204', async () => {
+      const nonExistingId = await helper.nonExistingId()
+
+      await api
+        .delete(`/api/blogs/${nonExistingId}`)
+        .expect(204)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length)
+    })
   })
+
+  describe('updating a blog', () => {
+    test('a blog can be updated', async () => {
+      const blogsAtStart = await helper.blogsInDb()
+      const blogToUpdate = blogsAtStart[0]
+
+      const updatedBlogData = {
+        likes: 4,
+        id: blogToUpdate.id,
+        title: blogToUpdate.title,
+        author: blogToUpdate.author,
+        url: blogToUpdate.url
+      }
+
+      await api
+        .put(`/api/blogs/${blogToUpdate.id}`)
+        .send(updatedBlogData)
+        .expect(200)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      const updatedBlog = blogsAtEnd.find(b => b.id === blogToUpdate.id)
+
+      assert.strictEqual(updatedBlog.title, updatedBlogData.title)
+      assert.strictEqual(updatedBlog.author, updatedBlogData.author)
+      assert.strictEqual(updatedBlog.url, updatedBlogData.url)
+      assert.strictEqual(updatedBlog.likes, updatedBlogData.likes)
+    })
+
+    test('updating a non-existing blog returns 404', async () => {
+      const nonExistingId = await helper.nonExistingId()
+
+      const updatedBlogData = {
+        likes: 10,
+        title: "Non-existing blog",
+        author: "Non-existing author",
+        url: "https://non-existing-url.com",
+        id: nonExistingId
+      }
+
+      await api
+        .put(`/api/blogs/${nonExistingId}`)
+        .send(updatedBlogData)
+        .expect(404)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length)
+    })
+  })
+
 })
 
 after(async () => {
