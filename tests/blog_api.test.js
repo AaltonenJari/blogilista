@@ -6,13 +6,25 @@ const app = require('../app')
 const helper = require('./test_helper')
 const Blog = require('../models/blog')
 const { log } = require('node:console')
+const User = require('../models/user')
 
 const api = supertest(app)
 
 describe('when there is initially some blogs saved', () => {
   beforeEach(async () => {
     await Blog.deleteMany({})
+    await User.deleteMany({})
     
+    await api.post('/api/users').send(helper.initialUser)
+
+    const loginRes = await api
+      .post('/api/login')
+      .send({
+        username: 'testuser',
+        password: 'sekret'
+      })
+    token = `Bearer ${loginRes.body.token}`
+
     const blogObjects = helper.initialBlogss.map(blog => new Blog(blog))
     const promiseArray = blogObjects.map(blog => blog.save())
     await Promise.all(promiseArray)
@@ -56,6 +68,7 @@ describe('when there is initially some blogs saved', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', token)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -63,9 +76,9 @@ describe('when there is initially some blogs saved', () => {
       const blogsAtEnd = await helper.blogsInDb()
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length + 1)
 
-      const contents = blogsAtEnd.map(n => n.title)
+      const titles = blogsAtEnd.map(b => b.title)
 
-      assert(contents.includes('Tekoälyä vai ei älyä? – Kuinka tekoäly muokkaa inhimillistä johtamista?'))
+      assert(titles.includes('Tekoälyä vai ei älyä? – Kuinka tekoäly muokkaa inhimillistä johtamista?'))
     })
 
     test('blog without title and url is not added', async () => {
@@ -75,6 +88,7 @@ describe('when there is initially some blogs saved', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', token)
         .send(newBlog)
         .expect(400)
 
@@ -91,6 +105,7 @@ describe('when there is initially some blogs saved', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', token)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -99,31 +114,67 @@ describe('when there is initially some blogs saved', () => {
       const blog = blogsAtEnd.find(b => b.title === "Tekoäly työnhaussa: Hakemuksen laatiminen")
       assert.strictEqual(blog.likes, 0)
     })
+
+    test('a new blog without valid token is not added', async () => {
+      const newBlog = {
+        title: "Tekoälyä vai ei älyä? – Kuinka tekoäly muokkaa inhimillistä johtamista?",
+        author: "Heljä Laitinen",
+        url: "https://piilo-osaajat.com/2025/01/10/kuinka-tekoaly-muokkaa-inhimillista-johtamista/",
+        likes: 5
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(401)
+        .expect('Content-Type', /application\/json/)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length)
+    })
+
   })
   
   describe('deletion of a blog', () => {
     test('a blog can be deleted', async () => {
-      const blogsAtStart = await helper.blogsInDb()
-      const blogToDelete = blogsAtStart[0]
+      const blogToDelete =
+      {
+        title: "Tekoäly työnhaussa: Hakemuksen laatiminen",
+        author: "Jari Aaltonen",
+        url: "https://piilo-osaajat.com/2024/11/28/tekoaly-tyonhaussa-hakemuksen-laatiminen/",
+        likes: 2
+      }
+
+       const res = await api
+        .post('/api/blogs')
+        .set('Authorization', token)
+        .send(blogToDelete)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
+      let blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length + 1)
 
       await api
-        .delete(`/api/blogs/${blogToDelete.id}`)
+        .delete(`/api/blogs/${res.body.id}`)
+        .set('Authorization', token)
         .expect(204)
 
-      const blogsAtEnd = await helper.blogsInDb()
+      blogsAtEnd = await helper.blogsInDb()
 
       const contents = blogsAtEnd.map(n => n.title)
       assert(!contents.includes(blogToDelete.title))
 
-      assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length - 1)
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length)
     })
 
-    test('deleting a non-existing blog returns 204', async () => {
+    test('deleting a non-existing blog returns 404', async () => {
       const nonExistingId = await helper.nonExistingId()
 
       await api
         .delete(`/api/blogs/${nonExistingId}`)
-        .expect(204)
+        .set('Authorization', token)
+        .expect(404)
 
       const blogsAtEnd = await helper.blogsInDb()
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogss.length)
