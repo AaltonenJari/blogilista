@@ -25,9 +25,19 @@ describe('when there is initially some blogs saved', () => {
       })
     token = `Bearer ${loginRes.body.token}`
 
-    const blogObjects = helper.initialBlogss.map(blog => new Blog(blog))
-    const promiseArray = blogObjects.map(blog => blog.save())
-    await Promise.all(promiseArray)
+    await api
+        .post('/api/blogs')
+        .set('Authorization', token)
+        .send(helper.initialBlogss[0])
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
+    await api
+        .post('/api/blogs')
+        .set('Authorization', token)
+        .send(helper.initialBlogss[1])
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
   })
 
   test('blogs are returned as json', async () => {
@@ -58,7 +68,7 @@ describe('when there is initially some blogs saved', () => {
   })
 
   describe('addition of a new blog', () => {
-    test('a valid blog can be added ', async () => {
+    test.only('a valid blog can be added ', async () => {
       const newBlog = {
         title: "Tekoälyä vai ei älyä? – Kuinka tekoäly muokkaa inhimillistä johtamista?",
         author: "Heljä Laitinen",
@@ -196,6 +206,7 @@ describe('when there is initially some blogs saved', () => {
 
       await api
         .put(`/api/blogs/${blogToUpdate.id}`)
+        .set('Authorization', token)
         .send(updatedBlogData)
         .expect(200)
 
@@ -221,6 +232,7 @@ describe('when there is initially some blogs saved', () => {
 
       await api
         .put(`/api/blogs/${nonExistingId}`)
+        .set('Authorization', token)
         .send(updatedBlogData)
         .expect(404)
 

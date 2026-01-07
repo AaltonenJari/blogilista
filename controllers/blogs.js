@@ -51,7 +51,7 @@ blogsRouter.delete('/:id', userExtractor, async (request, response ) => {
   response.status(204).end()
 })
 
-blogsRouter.put('/:id', async (request, response) => {
+blogsRouter.put('/:id', userExtractor, async (request, response) => {
   const { title, author, url, likes } = request.body
 
   const blog = await Blog.findById(request.params.id)
@@ -59,10 +59,18 @@ blogsRouter.put('/:id', async (request, response) => {
     return response.status(404).end()
   }
 
+  // get user from request object
+  const user = request.user
+
+  if (blog.user.toString() !== user.id.toString()) {
+    return response.status(401).json({ error: 'only the creator can delete a blog' })
+  }
+
   blog.title = title
   blog.author = author
   blog.url = url
   blog.likes = likes
+  blog.user = user.id
 
   return blog.save().then((updatedBlog) => {
     response.json(updatedBlog)
