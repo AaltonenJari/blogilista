@@ -17,6 +17,18 @@ describe('when there is initially some blogs saved', () => {
     
     await api.post('/api/users').send(helper.initialUser)
 
+    const newUser = {
+      username: 'mluukkai',
+      name: 'Matti Luukkainen',
+      password: 'salainen',
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
     const loginRes = await api
       .post('/api/login')
       .send({
