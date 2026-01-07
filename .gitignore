@@ -51,3 +51,6 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# VS Code REST Client
+rests/

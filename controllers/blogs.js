@@ -14,8 +14,6 @@ blogsRouter.get('/', async (request, response) => {
 
 blogsRouter.post('/', userExtractor, async (request, response) => {
   const body = request.body
-
-  // get user from request object
   const user = request.user
 
   const blog = new Blog({
@@ -27,10 +25,16 @@ blogsRouter.post('/', userExtractor, async (request, response) => {
   }) 
 
   const savedBlog = await blog.save()
+
   user.blogs = user.blogs.concat(savedBlog._id)
   await user.save()
 
-  response.status(201).json(savedBlog)
+  const populatedBlog = await savedBlog.populate('user', {
+    name: 1,
+    username: 1
+  })
+  
+  response.status(201).json(populatedBlog)
 })
 
 blogsRouter.delete('/:id', userExtractor, async (request, response ) => {
@@ -53,28 +57,27 @@ blogsRouter.delete('/:id', userExtractor, async (request, response ) => {
 
 blogsRouter.put('/:id', userExtractor, async (request, response) => {
   const { title, author, url, likes } = request.body
+  const user = request.user
 
-  const blog = await Blog.findById(request.params.id)
-  if (!blog) {
+  const updatedBlog = await Blog
+    .findByIdAndUpdate(
+      request.params.id,
+      {
+        title,
+        author,
+        url,
+        likes,
+        user: user.id
+      },
+      { new: true, runValidators: true }
+    )
+    .populate('user', { name: 1, username: 1 })
+
+  if (!updatedBlog) {
     return response.status(404).end()
   }
 
-  // get user from request object
-  const user = request.user
-
-  if (blog.user.toString() !== user.id.toString()) {
-    return response.status(401).json({ error: 'only the creator can delete a blog' })
-  }
-
-  blog.title = title
-  blog.author = author
-  blog.url = url
-  blog.likes = likes
-  blog.user = user.id
-
-  return blog.save().then((updatedBlog) => {
-    response.json(updatedBlog)
-  })
+  response.json(updatedBlog)
 })
 
 module.exports = blogsRouter
